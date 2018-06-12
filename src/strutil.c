@@ -616,13 +616,18 @@ SR_API int sr_parse_rational(const char *str, struct sr_rational *ret)
 	int32_t exponent = 0;
 	bool is_negative = false;
 
+	FILE *f;
+	f = fopen("debug.txt", "a");
+	setvbuf(f, NULL, _IONBF, 0);
 	errno = 0;
 	integral = g_ascii_strtoll(str, &endptr, 10);
 
 	if (str == endptr && (str[0] == '-' || str[0] == '+') && str[1] == '.')
 		endptr += 1;
-	else if (errno)
-		return SR_ERR;
+	else if (errno) {
+		fprintf(f, "Err 1\n");
+		// return SR_ERR;
+	}
 
 	if (integral < 0 || str[0] == '-')
 		is_negative = true;
@@ -630,19 +635,25 @@ SR_API int sr_parse_rational(const char *str, struct sr_rational *ret)
 	if (*endptr == '.') {
 		const char* start = endptr + 1;
 		fractional = g_ascii_strtoll(start, &endptr, 10);
-		if (errno)
-			return SR_ERR;
+		if (errno) {
+			fprintf(f, "Err 2: %s, %s, %c, %d, %lld\n", str, start, *endptr, is_negative, fractional);
+			// return SR_ERR;
+		}
 		fractional_len = endptr - start;
 	}
 
 	if ((*endptr == 'E') || (*endptr == 'e')) {
 		exponent = g_ascii_strtoll(endptr + 1, &endptr, 10);
-		if (errno)
-			return SR_ERR;
+		if (errno) {
+			fprintf(f, "Err 3\n");
+			// return SR_ERR;
+		}
 	}
 
-	if (*endptr != '\0')
-		return SR_ERR;
+	if (*endptr != '\0') {
+		fprintf(f, "Err 4\n");
+		// return SR_ERR;
+	}
 
 	for (int i = 0; i < fractional_len; i++)
 		integral *= 10;
